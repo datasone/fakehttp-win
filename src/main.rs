@@ -7,7 +7,10 @@ use clap::{Parser, Subcommand};
 use itertools::Itertools;
 use windivert::{WinDivert, prelude::WinDivertFlags};
 
-use crate::{interface::query_interfaces, net::divert_handler};
+use crate::{
+    interface::query_interfaces,
+    net::{divert_handler, uninstall_windivert},
+};
 
 #[derive(Parser, Debug)]
 #[clap(disable_help_flag = true)]
@@ -99,7 +102,7 @@ fn main() -> anyhow::Result<()> {
             if cancellation_token.load(std::sync::atomic::Ordering::SeqCst) {
                 tracing::warn!("Force quitting...");
                 if !args.no_uninstall {
-                    WinDivert::uninstall().unwrap();
+                    uninstall_windivert().unwrap();
                 }
                 std::process::exit(2);
             } else {
@@ -149,7 +152,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if !args.no_uninstall {
-        WinDivert::uninstall()?
+        uninstall_windivert()?
     }
 
     Ok(())

@@ -14,4 +14,4 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 windivert = "0.6.0"
 windivert-sys = "0.10.0"
-windows = { version = "0.61.3", features = ["Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock"] }
+windows = { version = "0.61.3", features = ["Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock", "Win32_System_Services"] }

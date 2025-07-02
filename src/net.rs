@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    mem::MaybeUninit,
     sync::{Arc, atomic::AtomicBool},
 };
 
@@ -13,6 +14,13 @@ use windivert::{
     packet::WinDivertPacket,
 };
 use windivert_sys::{ChecksumFlags, WINDIVERT_MTU_MAX};
+use windows::{
+    Win32::System::Services::{
+        CloseServiceHandle, ControlService, OpenSCManagerW, OpenServiceW, SC_MANAGER_ALL_ACCESS,
+        SERVICE_CONTROL_STOP, SERVICE_STATUS,
+    },
+    core::w,
+};
 
 fn fake_payload_http(http_hostname: &str) -> Vec<u8> {
     let payload = format!(
@@ -240,6 +248,20 @@ pub fn divert_handler<L: WinDivertLayerTrait + 'static>(
         let fake_packet = fake_packet(ttl, &fake_payload, &packet)?;
         divert.send(&fake_packet)?;
         divert.send(&packet)?;
+    }
+
+    Ok(())
+}
+
+pub fn uninstall_windivert() -> windows::core::Result<()> {
+    let mut status = MaybeUninit::uninit();
+    let status: *mut SERVICE_STATUS = status.as_mut_ptr();
+    unsafe {
+        let manager = OpenSCManagerW(None, None, SC_MANAGER_ALL_ACCESS)?;
+        let service = OpenServiceW(manager, w!("WinDivert"), SC_MANAGER_ALL_ACCESS)?;
+        ControlService(service, SERVICE_CONTROL_STOP, status)?;
+        CloseServiceHandle(service)?;
+        CloseServiceHandle(manager)?;
     }
 
     Ok(())
